@@ -33,6 +33,9 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
@@ -40,6 +43,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,6 +60,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     GoogleAccountCredential mCredential;
     private TextView mOutputText;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private RecyclerView recyclerView;
+    private CalendarAdapter mAdapter;
+    private List<CalendarEvents> calendarEventsList = new ArrayList<>();
 
 
     static final int REQUEST_ACCOUNT_PICKER = 1000;
@@ -80,6 +87,23 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         mOutputText= (TextView) findViewById(R.id.mOutputText);
         swipeRefreshLayout= (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
+        recyclerView=(RecyclerView)findViewById(R.id.recyclerView);
+
+        mAdapter=new CalendarAdapter(calendarEventsList);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setAdapter(mAdapter);
+
+
+        recyclerView.addOnItemTouchListener(
+                new RecyclerItemClickListener(this, new RecyclerItemClickListener.OnItemClickListener() {
+                    @Override public void onItemClick(View view, int position) {
+                        CalendarEvents calendarEvents = calendarEventsList.get(position);
+                        Toast.makeText(MainActivity.this, ""+calendarEvents.getDescription(), Toast.LENGTH_SHORT).show();
+                    }
+                })
+        );
 
 
         //Swipe Listener
@@ -101,6 +125,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         mCredential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
+
+        //Refresh Layout
+        swipeRefreshLayout.setRefreshing(true);
+        getResultsFromApi();
     }
 
     /**
@@ -304,7 +332,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
      * An asynchronous task that handles the Google Calendar API call.
      * Placing the API calls in their own task ensures the UI stays responsive.
      */
-    private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
+    private class MakeRequestTask extends AsyncTask<Void, Void, List<CalendarEvents>> {
         private com.google.api.services.calendar.Calendar mService = null;
         private Exception mLastError = null;
 
@@ -322,7 +350,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
          * @param params no parameters needed for this task.
          */
         @Override
-        protected List<String> doInBackground(Void... params) {
+        protected List<CalendarEvents> doInBackground(Void... params) {
             try {
                 return getDataFromApi();
             } catch (Exception e) {
@@ -337,10 +365,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
          * @return List of Strings describing returned events.
          * @throws IOException
          */
-        private List<String> getDataFromApi() throws IOException {
+        private List<CalendarEvents> getDataFromApi() throws IOException {
             // List the next 10 events from the primary calendar.
             DateTime now = new DateTime(System.currentTimeMillis());
-            List<String> eventStrings = new ArrayList<String>();
+            List<CalendarEvents> eventStrings = new ArrayList<CalendarEvents>();
             Events events = mService.events().list("primary")
                     .setPageToken(null)
                     .execute();
@@ -353,8 +381,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     // the start date.
                     start = event.getStart().getDate();
                 }
-                eventStrings.add(
-                       event.getEtag());
+                eventStrings.add(new CalendarEvents(event.getSummary(),event.getDescription(),event.getStart().getDateTime()+"",""));
             }
             return eventStrings;
         }
@@ -367,13 +394,15 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
 
         @Override
-        protected void onPostExecute(List<String> output) {
+        protected void onPostExecute(List<CalendarEvents> output) {
            swipeRefreshLayout.setRefreshing(false);
             if (output == null || output.size() == 0) {
                 mOutputText.setText("No results returned.");
             } else {
-                output.add(0, "Data retrieved using the Google Calendar API:");
-                mOutputText.setText(TextUtils.join("\n", output));
+                calendarEventsList.clear();
+                for(CalendarEvents c:output)
+                calendarEventsList.add(c);
+                mAdapter.notifyDataSetChanged();
             }
         }
 

@@ -1,34 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:focusable="true"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp"
-    android:paddingTop="10dp"
-    android:paddingBottom="10dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="8dp"
     android:clickable="true"
     android:background="?android:attr/selectableItemBackground"
     android:orientation="vertical">
 
     <TextView
+        android:alpha="0.7"
+        android:elevation="4dp"
+        android:textColor="@android:color/black"
+        android:gravity="left|center"
+        android:text="@string/app_name"
         android:id="@+id/name"
-        android:textSize="16dp"
-        android:textStyle="bold"
+        android:textSize="21sp"
         android:layout_alignParentTop="true"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
+        android:layout_height="45dp"  />
+    <View
+        android:alpha="0.2"
+        android:layout_below="@+id/date"
+        android:background="@android:color/black"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"/>
     <TextView
+        android:visibility="gone"
         android:id="@+id/description"
         android:layout_below="@id/name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
     <TextView
+        android:textSize="13sp"
+        android:text="12/2/17"
+        android:layout_below="@+id/name"
         android:id="@+id/date"
         android:layout_width="wrap_content"
-        android:layout_alignParentRight="true"
         android:layout_height="wrap_content" />
 
 </RelativeLayout>

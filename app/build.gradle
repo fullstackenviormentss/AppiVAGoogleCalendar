@@ -37,6 +37,8 @@ dependencies {
         exclude group: 'org.apache.httpcomponents'
     }
     compile 'com.android.support:recyclerview-v7:25.0.1'
-
+    compile 'com.mikepenz:fontawesome-typeface:4.7.0.0@aar'
+    compile "com.mikepenz:iconics-core:2.8.2@aar"
+    compile 'com.afollestad.material-dialogs:core:0.8.6.1'
     testCompile 'junit:junit:4.12'
 }
