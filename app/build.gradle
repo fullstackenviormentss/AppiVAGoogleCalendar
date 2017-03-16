@@ -36,6 +36,7 @@ dependencies {
     compile('com.google.apis:google-api-services-calendar:v3-rev237-1.22.0') {
         exclude group: 'org.apache.httpcomponents'
     }
+    compile 'com.android.support:recyclerview-v7:25.0.1'
 
     testCompile 'junit:junit:4.12'
 }
