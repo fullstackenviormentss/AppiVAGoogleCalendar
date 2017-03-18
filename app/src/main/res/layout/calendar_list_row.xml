@@ -16,10 +16,11 @@
         android:gravity="left|center"
         android:text="@string/app_name"
         android:id="@+id/name"
+        android:minHeight="45dp"
         android:textSize="21sp"
         android:layout_alignParentTop="true"
         android:layout_width="match_parent"
-        android:layout_height="45dp"  />
+        android:layout_height="wrap_content"  />
     <View
         android:alpha="0.2"
         android:layout_below="@+id/date"

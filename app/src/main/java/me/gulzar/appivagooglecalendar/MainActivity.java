@@ -1,8 +1,12 @@
 package me.gulzar.appivagooglecalendar;
 
+import android.graphics.Color;
+import android.net.Uri;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.extensions.android.http.AndroidHttp;
@@ -19,6 +23,8 @@ import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.client.util.DateTime;
 
 import com.google.api.services.calendar.model.*;
+import com.mikepenz.fontawesome_typeface_library.FontAwesome;
+import com.mikepenz.iconics.IconicsDrawable;
 
 import android.Manifest;
 import android.accounts.AccountManager;
@@ -38,6 +44,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -100,7 +108,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 new RecyclerItemClickListener(this, new RecyclerItemClickListener.OnItemClickListener() {
                     @Override public void onItemClick(View view, int position) {
                         CalendarEvents calendarEvents = calendarEventsList.get(position);
-                        Toast.makeText(MainActivity.this, ""+calendarEvents.getDescription(), Toast.LENGTH_SHORT).show();
+               MaterialDialog md=         new MaterialDialog.Builder(MainActivity.this)
+                                .iconRes(R.mipmap.ic_launcher)
+                                .limitIconToDefaultSize() // limits the displayed icon size to 48dp
+                                .title(calendarEvents.getName())
+                                .content(calendarEvents.getDate()+"\n\n"+calendarEvents.getDescription()+"\n"+calendarEvents.getType())
+                                .show();
+
+                        md.getIconView().setImageDrawable( new IconicsDrawable(MainActivity.this, FontAwesome.Icon.faw_calendar_check_o).actionBar());
                     }
                 })
         );
@@ -381,7 +396,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     // the start date.
                     start = event.getStart().getDate();
                 }
-                eventStrings.add(new CalendarEvents(event.getSummary(),event.getDescription(),event.getStart().getDateTime()+"",""));
+                if(event.getStart().getDateTime().toString().indexOf("T")!=-1)
+                eventStrings.add(new CalendarEvents(event.getSummary(),event.getDescription(),event.getStart().getDateTime().toString().substring(0,event.getStart().getDateTime().toString().indexOf("T"))+"",""));
+                else
+                    eventStrings.add(new CalendarEvents(event.getSummary(),event.getDescription(),event.getStart().getDateTime().toString()+"",event.getKind()));
             }
             return eventStrings;
         }
@@ -397,7 +415,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         protected void onPostExecute(List<CalendarEvents> output) {
            swipeRefreshLayout.setRefreshing(false);
             if (output == null || output.size() == 0) {
-                mOutputText.setText("No results returned.");
+                Toast.makeText(MainActivity.this, "No results returned.", Toast.LENGTH_SHORT).show();;
             } else {
                 calendarEventsList.clear();
                 for(CalendarEvents c:output)
@@ -426,6 +444,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 mOutputText.setText("Request cancelled.");
             }
         }
+    }
+
+    public void signOuts()
+    {
+
+        swipeRefreshLayout.setRefreshing(true);
+        mCredential=null;
+        // Initialize credentials and service object.
+        mCredential = GoogleAccountCredential.usingOAuth2(
+                getApplicationContext(), Arrays.asList(SCOPES))
+                .setBackOff(new ExponentialBackOff());
+        getResultsFromApi();
     }
 
 
